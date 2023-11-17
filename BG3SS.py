@@ -22,7 +22,7 @@ class KeySenderApp:
         y = (screen_height - 250) // 2  # 250 is the height of the window
 
         # Set the window size and position
-        self.root.geometry("300x200+{}+{}".format(x, y))
+        self.root.geometry(f"300x200+{x}+{y}")
 
         # Set the window icon
         self.root.iconbitmap(icon_path)
@@ -85,7 +85,9 @@ class KeySenderApp:
 
         # Counter for key presses
         self.key_press_count = 0
-        self.key_press_label = ttk.Label(root, text="Saves: {}".format(self.key_press_count), style='TLabel')
+        self.key_press_label = ttk.Label(
+            root, text=f"Saves: {self.key_press_count}", style='TLabel'
+        )
         self.key_press_label.pack(side="bottom", anchor="se")
 
         # Bind a key press event to capture the key
@@ -102,36 +104,37 @@ class KeySenderApp:
             self.start_countdown()
 
     def start_countdown(self):
-        if not self.is_counting_down:
-            delay = float(self.delay_var.get())
+        if self.is_counting_down:
+            return
+        delay = float(self.delay_var.get())
 
-            if delay <= 1:
-                # Display an error message and return without starting the countdown
-                messagebox.showerror("Error", "Delay must be greater than 1.")
-                return
+        if delay <= 1:
+            # Display an error message and return without starting the countdown
+            messagebox.showerror("Error", "Delay must be greater than 1.")
+            return
 
-            self.is_counting_down = True
-            self.start_button.config(text="Stop")
-            if self.delay_units.get() == "Minutes":
-                delay *= 60
+        self.is_counting_down = True
+        self.start_button.config(text="Stop")
+        if self.delay_units.get() == "Minutes":
+            delay *= 60
 
-            self.stop_countdown_event = threading.Event()
+        self.stop_countdown_event = threading.Event()
 
-            def countdown(delay):
-                original_delay = delay  # Store the original delay
-                while not self.stop_countdown_event.is_set():
-                    while delay > 0 and not self.stop_countdown_event.is_set():
-                        self.countdown_value.set(f"{delay:.1f} seconds")
-                        time.sleep(1)
-                        delay -= 1
-                    if not self.stop_countdown_event.is_set():
-                        self.send_key()
-                        delay = original_delay  # Reset the delay to the original value
+        def countdown(delay):
+            original_delay = delay  # Store the original delay
+            while not self.stop_countdown_event.is_set():
+                while delay > 0 and not self.stop_countdown_event.is_set():
+                    self.countdown_value.set(f"{delay:.1f} seconds")
+                    time.sleep(1)
+                    delay -= 1
+                if not self.stop_countdown_event.is_set():
+                    self.send_key()
+                    delay = original_delay  # Reset the delay to the original value
 
-                self.reset_countdown()
+            self.reset_countdown()
 
-            self.countdown_thread = threading.Thread(target=countdown, args=(delay,))
-            self.countdown_thread.start()
+        self.countdown_thread = threading.Thread(target=countdown, args=(delay,))
+        self.countdown_thread.start()
 
     def stop_countdown(self):
         if self.is_counting_down:
@@ -141,7 +144,7 @@ class KeySenderApp:
         key_to_send = self.key_entry.get()
         keyboard.press_and_release(key_to_send)
         self.key_press_count += 1
-        self.key_press_label.config(text="Saves: {}".format(self.key_press_count))
+        self.key_press_label.config(text=f"Saves: {self.key_press_count}")
 
     def reset_countdown(self):
         self.is_counting_down = False
